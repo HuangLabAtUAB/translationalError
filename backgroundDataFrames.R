@@ -13,11 +13,8 @@ sort(table(hmPairs$sav), decreasing = T)
 rm(humanPepAA, humanPepAA)
 
 dim(hmPairs) #294,513      9
-table(hmPairs$humanPep %in% hmPairs$mousePep)
 hmCommonPep = intersect(hmPairs$humanPep,hmPairs$mousePep)
 length(hmCommonPep) #1419
-# hmPairs[humanPep=='VLMLLYSSKK' | mousePep=='VLMLLYSSKK']
-# hmPairs[humanPep=='MLMRREQVLK' | mousePep=='MLMRREQVLK']
 hmPairs = hmPairs[!(humanPep%in%hmCommonPep) & !(mousePep%in%hmCommonPep)]
 dim(hmPairs) #291,925 
 table(hmPairs$sav%in%c('I->L','L->I'))#285655   6270 #these are not discoverable
@@ -44,8 +41,6 @@ aaMass = rbind(aaMass,
                           chemical_formula='C6H11ON',Monoisotopic=113.0841, 
                           Average=113.1594,AAtype='unpolar'))
 
-
-#aaDelta = fread('~/translationError/aaDelta.tsv') #deltaMass is first column minus the second column
 aaDelta = list()
 
 for (i in aaMass$one_letter_code){
@@ -64,5 +59,4 @@ aaDelta$aaFrom = as.character(aaDelta$aaFrom)
 dim(aaDelta) #360   3
 fwrite(aaDelta, file = '~/translationError/aaDelta.tsv', sep = '\t')
 
-aaDelta[,min(dist(detaMass)),by='aaFrom'] #0.0434
 
