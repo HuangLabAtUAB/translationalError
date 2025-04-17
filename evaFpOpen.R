@@ -1,33 +1,16 @@
-#fpOpen = fread('./fpOpenPointFive/psm.tsv', sep = '\t', select = 1:34, fill=T)
-fpOpen = fread('/Volumes/ChenDrive/fpSearchMSNew_pancreatic/fpOpen/psm.tsv', sep = '\t', select = 1:34, fill=T)
+library(data.table)
+
+#read the PSM-level results from MSFragger-open search
+fpOpen = fread('./fpOpenPointFive/psm.tsv', sep = '\t', select = 1:34, fill=T)
 colnames(fpOpen) = gsub(colnames(fpOpen), pattern='\\s+', replacement = '_')
-dim(fpOpen) # 2602321      34
 fpOpen = fpOpen[MSFragger_Localization!=''] #only keep the location is available
-dim(fpOpen) # 621,338      34
 fpOpen[, msSample:=gsub(Spectrum, pattern='^[0-9]+(_[0-9]{2}_).*', replacement='\\1')]
 fpOpen = fpOpen[as.numeric(substring(msSample,2,3)) < 25] #only need the first twenty-four samples
 
 fpOpen[,msmsScanNums := gsub(Spectrum, pattern=".*?\\.([0-9]+)\\..*", replacement = '\\1')]
 fpOpen[, msmsScanNum := as.numeric(msmsScanNums)]
 
-dim(fpOpen) #313,516
 fpOpen[,spetrNO:=paste0(msSample,msmsScanNums)]
-
-# unique(unlist(strsplit(unique(fpOpen$Assigned_Modifications), ', | ')))
-#assigned_modifications are: M(15.9949) N-term(42.0106) C(57.0214)
-
-
-#below are the results for one sample
-# fpOpenEva = fpOpenResEvaFuc(fpOpenRes = fpOpen, gtSeqs = mqMouse$`_01_`$Sequence, 
-#                 gtSpectr = mqMouse$`_01_`$spectrumSeq,
-#                 minValThres = 0.01) #101   T107  ||2865   111 
-# fpOpenResEvaFuc(fpOpenRes = fpOpen, gtSeqs = mqMouse$`_01_`$Sequence, 
-#          gtSpectr = mqMouse$`_01_`$spectrumSeq,
-#          minValThres = 0.05) #F412   T418  ||2552   424 
-# 
-# fpOpenResEvaFuc(fpOpenRes = fpOpen, gtSeqs = fpMouse$`_01_`$Peptide, 
-#                 gtSpectr = fpMouse$`_01_`$spectrumSeq,
-#                 minValThres = 0.05) #365   T465  ||2847   471 
 
 #only evaluate the single sav
 fpOpen[,numSAV := stringr::str_count(MSFragger_Localization, pattern="[a-z]")]
@@ -39,14 +22,7 @@ fpOpenEva = fpOpenResEvaFuc(fpOpenRes = fpOpen,
                             gtSpectr2 = fpMouseDt$spectrumSeq,
                             returnDt = TRUE)
 
-# [1] "-----precision(spectrum)-----"
-# 
-# FALSE  TRUE 
-#  15518  24747 
-# [1] "-----sensitivity(spectrum)-----"
-# 
-# FALSE  TRUE 
-# 33909 24853 
+
 table(fpOpenEva$isinAnyGS) #12967 27298 ->12964 27301 
 fpOpenEvaCount = fpOpenEva[,.(totalSample=.N,
                               totalTrueSample1=sum(isinGS1),
@@ -117,7 +93,7 @@ ggplot(fpOpenEvaSenDt2, aes(type,frac,col=type))+
   geom_boxplot(outliers = FALSE)+
   geom_jitter(width = 0.1)+ylim(c(0.1,0.5))+ggtitle('without_modi_sensitivity')
 
-##export the fpOpen searched results for autoRT
+##export the MSFragger-open searched results for autoRT evaluation
 table(fpOpenEva$Assigned_Modi)
 fpOpenEva[, pepSAV4autoRT:=forMatPep(pep = pepSAV, modi = Assigned_Modi)]
 fpOpenEva[, pepOrg4autoRT:=forMatPep(pep = PepOrg, modi = Assigned_Modi)]
@@ -141,8 +117,7 @@ for(msSampleName in unique(fpOpenEva$msSample)){
          file = paste0('./fpOpenRes4autoRT/',msSampleName,'predict_org_noModi.tsv'), sep = '\t')
 }
 
-#for pdeep2
-##add charge information
+##export the MSFragger-open searched results for pDeep2 evaluation
 table(fpOpenEva$spetrNO %in% fpOpen$spetrNO)
 fpOpenEva[,charge:=fpOpen[fpOpenEva$spetrNO,Charge,on='spetrNO']]
 fpOpenEva[,mod4pDeep:=gsub(Assigned_Modi,pattern=',',replacement=';')]
@@ -255,10 +230,6 @@ fpCount4Sen = mqIntersectFp[,.(totalN=.N,
 fpSavCount4sen = mqIntersectFp[,.(totalN=.N,
                         idRatio=sum(ID_by_fpOpen)/.N),by='sav']
 
-# ggplot(fpCount4Sen, aes(sav, idRatio))+
-#   geom_boxplot()+geom_jitter(width = 0.1)+
-#   theme(axis.text.x = element_text(angle = -90))
-#fpCount4Sen[, totalNbySAV:=sum(totalN), by='sav']
 fpSavCount4sen[,aaFrom:=gsub(sav,pattern='->.*',replacement='')]
 fpSavCount4sen[,aaTo:=gsub(sav,pattern='.*->',replacement='')]
 fpSavCount4sen[,aaFromMass:=aaMass[fpSavCount4sen$aaFrom,Average,on='one_letter_code']]
@@ -268,10 +239,6 @@ fpSavCount4sen[, aaDeltaMass := abs(aaToMass - aaFromMass)]
 
 sav2display = intersect(sav2display,fpSavCount4sen[totalN>10, sav])
 length(sav2display) #60
-
-# ggplot(fpCount4Sen[totalNbySAV>100], aes(sav, idRatio))+
-#   geom_boxplot()+geom_jitter(width = 0.1)+
-#   theme(axis.text.x = element_text(angle = -90))
 
 fpCount4Sen[sav%in%sav2display,length(unique(sav))]
 ggplot(fpCount4Sen[sav%in%sav2display], aes(sav, idRatio))+
