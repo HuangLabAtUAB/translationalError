@@ -4,7 +4,7 @@ The R codes for the translational error SAAV project.
 Below is the annotation for the code files.
 
 1. getMousePeptide.R - the R script for obtaining the theoretical mouse peptides.
-2. savStatistics.R - the R script to summerize the patterns for SAAVs from PDX or from TCGA somatic mutation.
+2. backgroundDataFrames.R and savStatistics.R - to summarize the patterns for SAAVs from PDX or from TCGA somatic mutation.
 3. CollectGS.R - collect gold-standard PSMs from mouseDb-informed search
 4. evaFpOpen.R and fpOpenEvaFuc.R - parse and evalute MSFragger open search results.
 5. dpSearch.R and fpEvaFun.R - parse and evalute MaxQuant dependent search results.
