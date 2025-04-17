@@ -9,6 +9,7 @@ Below is the annotation for the code files.
 4. evaFpOpen.R and fpOpenEvaFuc.R - parse and evalute MSFragger open search results.
 5. dpSearch.R and fpEvaFun.R - parse and evalute MaxQuant dependent search results.
 6. pFind_eva_all.R - parse and evaluate Open-pFind search results.
+7. plotFixedSearch.R, variableSearchMqParse.R, and VariableModi.R - parse and evaluate fixed search results with predefine SAAVs.
 
 
 Other files:
