@@ -1,3 +1,6 @@
+library(data.table)
+library(ggplot2)
+#read the PSM-level results of open-pFind
 pFind = fread('./pFind/pFind-Filtered.spectra')
 #the "sequence" column is the before the SAV identified by pFind
 pFind[,MsSample:=gsub(File_Name, pattern='180316(_[0-9]+_).*', replacement='\\1')]
@@ -18,9 +21,6 @@ pFind = pFind[numOfSub==1]
 pFind[, pos:= gsub(".*?([0-9]+),[A-Z][a-z][a-z]->[A-Z][a-z][a-z].*", '\\1', Modification)]
 pFind[, pos:= gsub(".*?([0-9]+),[^;]+[A-Z][a-z][a-z]->[A-Z][a-z][a-z].*", '\\1', pos)]
 
-# pFind[, pos:= gsub(".*?([0-9]+),[A-Z]*[a-z]+\\[.+\\]\\([A-Z][a-z][a-z]->.*", '\\1', pos)]
-# pFind[, pos:= gsub(".*?([0-9]+),[A-Z]*[a-z]+\\+.*", '\\1', pos)]
-# pFind[, pos:= gsub(".*?([0-9]+),.*", '\\1', pos)]#21,Delta_H(4)C(2)O(-1)S(1)[S](Ser->Met[S]);
 pFind[, pos:=as.numeric(pos)]
 pFind[is.na(pos), Modification]
 
@@ -34,7 +34,6 @@ table(is.na(pFind$endAA)) #F97116   T296so of the endAA is Orn, Dha
 pFind = pFind[!is.na(endAA)]
 dim(pFind) #97116
 table(pFind$endAA) #no I or L, but X
-table(pFind$startAA) #no I or L, but X
 
 pFind[startAA!='X',table(substr(Sequence,pos,pos)==startAA)] #All TRUE
 pFind[startAA=='X',table(substr(Sequence,pos,pos))] #only I and L
@@ -48,7 +47,7 @@ pFind[startAA=='X',startAA:=substr(Sequence,pos,pos)]
 substr(pFind$pepSAV,pFind$pos, pFind$pos) <- pFind$endAA
 #now, pepSAV is the sequence after pFind-based SAV
 
-##add this for spectrum-level evaluation
+##add PSM info for spectrum-level evaluation
 pFind[, spectrumID:=paste0(MsSample,Scan_No)]
 pFind[, spectrumSeq:=paste0(spectrumID,'_',pepSAV)]
 ####
@@ -188,11 +187,6 @@ ggplot(pFindSavCountBySample[sav%in%sav2display],
 
 ggplot(fpOpenSavCount[sav2display,,on='sav'], aes(sav,aaDeltaMass))+
   geom_bar(stat = 'identity')+theme(axis.text.x = element_text(angle = -90))
-
-
-# fpMouseDt[spectrumSeq%in%mqMouseDt$spectrumSeq][,.(totalSample=.N,
-#                                                    totalID=sum(ID_by_fpOpen)),
-#                                                 by='msSample']
 
 
 ###sensitivity
