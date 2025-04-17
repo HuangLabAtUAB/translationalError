@@ -1,12 +1,11 @@
+library(data.table)
+
 dp = fread('./Dp/allPeptides.txt')
 colnames(dp) = gsub(colnames(dp), pattern='\\s+', replacement='_')
-dim(dp)#4268855
 dp = dp[DP_base_sequence!='']
-dim(dp) #156551
 ##
 dp[, msSample:=gsub(Raw_file, pattern='180316(_[0-9]+_).*', replacement='\\1')]
 
-####aiming for differential sensitivities######
 
 dpEva = dpEvaFuc(resDt = dp, gtSpectr = mqMouseDt[humanDetected=='Yes', spectrumSeq], 
                gtSpectr2 = fpMouseDt[humanDetected=='Yes', spectrumSeq],
@@ -15,8 +14,6 @@ dpEva = dpEvaFuc(resDt = dp, gtSpectr = mqMouseDt[humanDetected=='Yes', spectrum
                returnDt = TRUE) #False746 TRUE 453 || F924 T453
 
 
-##
-table(dpEva$isinAnyGS) #15596 10454 
 dpEvaCount = dpEva[,.(totalSample=.N,
                               totalTrueSample1=sum(isinGS1),
                               totalTrueSample2=sum(isinGS2),
@@ -65,35 +62,3 @@ dpEvaSenDt[,type:=factor(type,levels = c('GSFromMqCombine','GSFromFpCombine','GS
 ggplot(dpEvaSenDt, aes(type,frac,col=type))+
   geom_boxplot(outliers = FALSE)+
   geom_jitter(width = 0.1)+ylim(c(0,0.7))
-
-table(fpMouseDt$Modified_Peptide!='',fpMouseDt$ID_by_fpOpen)
-
-
-
-# ##spectral level
-# table(dp1$MSMS_scan_numbers %in% mqMouseDt$msmsScanNums) #F344 T1585
-# ##a lot of spectrum  identified in Dp are actually mouse,
-# #but the sequence resolving is not right
-# 
-# 
-# dp1Eva = dpEvaFuc(resDt = dp, gtSeqs = mqMouse$`_01_`, 
-#                         gtSpectr = mqMouseDt[msSample=='_01_',spectrumSeq],
-#                         minValThres = 0.05,minProb=0.5, returnDt = TRUE) 
-# dim(dp1Eva) #6476   14
-# dpComScanNum = intersect(dp1Eva$scanNum, mqMouseDt[msSample=='_01_',msmsScanNum])
-# length(dpComScanNum) #1759
-# 
-# #what happen? have 1759 out of 6476 mouse spectrum identified being dp, but end up with incorrect sequence
-# dpDebugDt = cbind(dp[dpComScanNum, .(DP_base_sequence, DP_probabilities),on='MSMS_scan_numbers'], 
-#       mqMouseDt[msSample=='_01_'][dpComScanNum,.(Sequence, Modified_sequence),on='msmsScanNums'],
-#       dp1Eva[dpComScanNum, .(PepOrg,pepSAV),on='scanNum'])
-# 
-# table(dpDebugDt$DP_base_sequence == dpDebugDt$PepOrg) #all T
-# table(dpDebugDt$Sequence == dpDebugDt$pepSAV)
-# # FALSE  TRUE 
-# # 1397   304 
-# table(dpDebugDt$DP_base_sequence == dpDebugDt$Sequence) #all F
-# 
-
-
-
