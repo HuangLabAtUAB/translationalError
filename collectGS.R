@@ -1,6 +1,5 @@
-#collect the golden standard peptides, which are the ones searched by using mouse+house reference
+#collect the golden standard peptides, which are the ones searched by using mouse+human reference
 #mq = maxQuant
-#combined means human and mouse combined fasta reference.
 library(data.table)
 
 ####### maxquant conventional search mouse human combined for all samples ###
@@ -296,6 +295,8 @@ table(fpMqHmCommon$Assigned_Modifications)
 
 fpMqHmCommon[, pepQueryFormat:=forMatPep(Peptide,Assigned_Modifications)]
 table(fpMqHmCommon$msSample)
+
+       
 ###output for autoRT
 for(msSampleName in unique(fpMqHmCommon$msSample)){
   fwrite(fpMqHmCommon[msSample==msSampleName,.(x=pepQueryFormat,y=Retention)],
