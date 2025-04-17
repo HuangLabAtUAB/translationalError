@@ -52,11 +52,6 @@ dpEvaFuc = function(resDt,
   ##filtered by common knowledge and data sense
   dpEvaThres = dpEva[minValue < minValThres & posProb>minProb]
   
-  # print("-----precision(spectrum)-----")
-  # print(table(dpEvaThres$spectrSeq %in% gtSpectr))
-  # print("-----sensitivity(spectrum)-----")
-  # print(table(gtSpectr %in% dpEvaThres$spectrSeq)) 
-  
   if(returnDt == TRUE) {
     dpEvaThres[, isinGS1 := spectrSeq%in%gtSpectr]
     if(!is.null(gtSpectr2)){
