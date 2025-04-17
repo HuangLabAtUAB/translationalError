@@ -1,4 +1,6 @@
-#the most abundant Saavs for fixed search
+library(data.table)
+
+#obtain the most abundant SAAVs for fixed search
 savTotalCount = mqMouseDt[,.N,by=c('msSample','sav')]
 savTotalCountBySample = savTotalCount[,.(totalCount=sum(N),cancer='pancreatic'),by='msSample']
 saveRDS(savTotalCountBySample,file = 'savTotalCountBySamplePanc.rds')
@@ -23,23 +25,6 @@ ggplot(savTotalCountSub,aes(sav,N,col=sametypeConvert))+geom_boxplot(outliers = 
 
 
 
-###
-# #the results from human only research but with variable modification as the parameter
-# #X->M
-#mqXM = fread('/Volumes/ChenDrive/mqSearchFixed/mqIMLM_XM.tsv')
-# table(mqXM$spectrSeq %in% mqMouseDt$spectrumSeq) #449   878 #precision
-# table(mqXM$spectrSeq %in% fpMouseDt$spectrumSeq) # 484   843 
-# 
-# table(fpMouseDt[sav%in%c('L->M','I->M'),spectrumSeq] %in% mqXM$spectrSeq)
-# # FALSE  TRUE 
-# # 928   780 
-# table(mqMouseDt[sav%in%c('L->M','I->M'),spectrumSeq] %in% mqXM$spectrSeq)
-# # FALSE  TRUE 
-# # 732   812
-# plotFixedMqPre(mqRes = mqXM,gtDt1 = mqMouseDt, gtDt2 = fpMouseDt)
-# plotFixedMqSen(mqRes = mqXM,gtDt1 = mqMouseDt, 
-#                gtDt2 = fpMouseDt,saavStr = c('L->M','I->M'))
-# 
 
 #D->E
 mqVXED_ED = fread('/Volumes/ChenDrive/mqSearchFixed/mqVXED_ED.tsv')
@@ -103,17 +88,6 @@ plotFixedMqSen(mqXV[startAA=='I'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
 fpED[,sav:=ifelse(grepl(Assigned_Modifications,pattern='D'),'D->E','E->D')]
 table(grepl(fpED$Assigned_Modifications,pattern='D'))
 # D->E1 1793 E->D 17870 
-table(grepl(fpED$Assigned_Modifications,pattern='D')
-      &grepl(fpED$Assigned_Modifications,pattern='E')) #all False
-table(fpED[sav=='D->E',spectrSeq] %in% mqMouseDt$spectrumSeq) #15857  T2013   #precision
-table(fpED[sav=='E->D',spectrSeq] %in% mqMouseDt$spectrumSeq) # 9817  1976 
-table(fpED[sav=='E->D',spectrSeq] %in% fpMouseDt$spectrumSeq) # 9261  T2532 
-table(fpED[sav=='D->E',spectrSeq] %in% fpMouseDt$spectrumSeq) # 15366  2504
-table(fpMouseDt[sav=='D->E',spectrumSeq] %in% fpED[sav=='D->E',spectrSeq]) # 
-table(fpMouseDt[sav=='V->X',spectrumSeq] %in% mqVXED_VX$spectrSeq)
-# FALSE  TRUE 
-# 2719  2225 
-table(mqMouseDt[sav=='V->X',spectrumSeq] %in% mqVXED_VX$spectrSeq)
 
 plotFixedMqPre(fpED[sav=='D->E'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
                ylimV = c(0,1))
@@ -129,6 +103,34 @@ plotFixedMqSen(fpOpenEva[sav=='D->E'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
 table(fpED[sav=='D->E',spectrumID] %in% fpMouseDt$spectrumID)
 # FALSE  TRUE 
 # 10841  7029 
+
+#fpVX
+fpVX[,startAA:=gsub(Assigned_Modifications, pattern='.*(I|L|V)\\(.*',replacement='\\1')]
+table(fpVX$startAA)
+fpVX[,sav:=ifelse(startAA=='V','V->X',paste0(startAA,'->V'))]
+table(fpVX$sav)
+# V->X  X->V 
+# 19514 17657 
+#I->V  L->V  V->X 
+#9915  7742 19514 
+plotFixedMqPre(fpVX[sav=='V->X'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
+               ylimV = c(0,1))
+plotFixedMqSen(fpVX[sav=='V->X'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
+               ylimV = c(0,1), saavStr = 'V->X')
+
+
+
+#I->V
+plotFixedMqPre(fpVX[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
+               ylimV = c(0,1))#0.381524914786561
+plotFixedMqSen(fpVX[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
+               ylimV = c(0,1),saavStr = 'I->V')
+plotFixedMqPre(fpOpenEva[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
+               ylimV = c(0,1))
+plotFixedMqSen(fpOpenEva[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
+               ylimV = c(0,1),saavStr = 'I->V')
+
+#why the fixed search performed so poorly in precision?
 commonTmp = intersect(fpED[sav=='D->E',spectrumID],fpMouseDt$spectrumID)
 debugTmp[spectrumID=='_01_1672']
 debugTmp = fpMouseDt[spectrumID%in%commonTmp]
@@ -165,38 +167,5 @@ ggplot(debugSaavTypeDt2[1:10], aes(saav, count))+geom_bar(stat = 'identity')
 ggplot(debugSaavTypeDt2[1:10], aes(saav, similarity))+geom_bar(stat = 'identity')
 
 
-#fpVX
-fpVX[,startAA:=gsub(Assigned_Modifications, pattern='.*(I|L|V)\\(.*',replacement='\\1')]
-table(fpVX$startAA)
-fpVX[,sav:=ifelse(startAA=='V','V->X',paste0(startAA,'->V'))]
-table(fpVX$sav)
-# V->X  X->V 
-# 19514 17657 
-#I->V  L->V  V->X 
-#9915  7742 19514 
-plotFixedMqPre(fpVX[sav=='V->X'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
-               ylimV = c(0,1))
-plotFixedMqSen(fpVX[sav=='V->X'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
-               ylimV = c(0,1), saavStr = 'V->X')
 
 
-
-#I->V
-plotFixedMqPre(fpVX[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
-               ylimV = c(0,1))#0.381524914786561
-plotFixedMqSen(fpVX[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
-               ylimV = c(0,1),saavStr = 'I->V')
-plotFixedMqPre(fpOpenEva[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
-               ylimV = c(0,1))
-plotFixedMqSen(fpOpenEva[sav=='I->V'],gtDt1 = mqMouseDt, gtDt2 = fpMouseDt,
-               ylimV = c(0,1),saavStr = 'I->V')
-
-
-#tmp!!
-plotFixedMqPre(mqRes = mqVX_VX[msSample%in%c(paste0('_0',1:9,'_'),paste0('_',10:17,'_'))],gtDt1 = mqMouseDt, 
-               gtDt2 = fpMouseDt,ylimV = c(0,1))
-plotFixedMqSen(mqXV[msSample%in%c(paste0('_0',1:9,'_'),paste0('_',10:17,'_'))][startAA=='I'],
-               gtDt1 = mqMouseDt[msSample%in%c(paste0('_0',1:9,'_'),paste0('_',10:17,'_'))], 
-               gtDt2 = fpMouseDt[msSample%in%c(paste0('_0',1:9,'_'),paste0('_',10:17,'_'))],
-               ylimV = c(0,1),saavStr = 'I->V')
-###
