@@ -10,7 +10,7 @@ Below is the annotation for the code files.
 5. dpSearch.R and fpEvaFun.R - parse and evalute MaxQuant dependent search results.
 6. pFind_eva_all.R - parse and evaluate Open-pFind search results.
 7. plotFixedSearch.R, variableSearchMqParse.R, and VariableModi.R - parse and evaluate fixed search results with predefine SAAVs.
-8. ParseMaf.R – translate the somatic mutations into customized databases.
+8. ParseMaf.R – translate somatic mutations into customized databases.
 
 
 Other files:
