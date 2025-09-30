@@ -9,13 +9,12 @@ length(unique(mqCombined$Raw_file)) #24 raw files
 dim(mqCombined) #913,616
 
 ##spectral count uniq-human vs uniq-mouse
-mqCombined[, species:=ifelse(grepl(Proteins, pattern='taxon\\|9606'),'human','mouse')]
+mqCombined[, species:=ifelse(grepl(Proteins, pattern='taxon\\|9606'),'human','unknown')]
+mqCombined[, species:=ifelse(grepl(Proteins, pattern='taxon\\|10090'),'mouse',species)]
 mqCombined[, species:=ifelse(grepl(Proteins, pattern='taxon\\|10090.*taxon\\|9606'),'both',species)]
 mqCombined[, species:=ifelse(grepl(Proteins, pattern='taxon\\|9606.*taxon\\|10090'),'both',species)]
 mqCombined[, msSample:=gsub(Raw_file, pattern='180316(_[0-9]+_).*', replacement='\\1')]
-table(mqCombined$species)
-#both  human  mouse 
-#438,576 283,288 191,752 
+
 ##spectral count
 ggplot(mqCombined, aes(msSample,fill=species))+
   geom_bar(stat = 'count')+
