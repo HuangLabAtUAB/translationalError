@@ -1,5 +1,9 @@
 library(data.table)
 
+f1s <- function(prs, rcl){
+  2*(prs*rcl)/(prs+rcl)
+}
+
 #read the PSM-level results from MSFragger-open search
 fpOpen = fread('./fpOpenPointFive/psm.tsv', sep = '\t', select = 1:34, fill=T)
 colnames(fpOpen) = gsub(colnames(fpOpen), pattern='\\s+', replacement = '_')
@@ -74,6 +78,16 @@ range(fpOpenEvaSenDt[type=='GSFromBoth',frac])
 median(fpOpenEvaSenDt[type=='GSFromBoth',frac])
 #0.4835638
 
+fpOpenF1 <- data.table(type = fpOpenEvaSenDt$type, 
+                       msSample=fpOpenEvaSenDt$msSample,
+                       f1_score =f1s(fpOpenEvaSenDt$frac,fpOpenEvaRatioMelt$frac))
+fpOpenF1[,type:=factor(type, levels = c('GSFromBoth','GSFromFpCombine','GSFromMqCombine'))]
+ggplot(fpOpenF1, aes(type,f1_score,col=type))+
+  geom_boxplot(outliers = FALSE)+
+  geom_jitter(width = 0.1)+ylim(c(0.2,0.8))+
+  ggtitle('f1_score')
+fpOpenF1[type=='GSFromBoth', range(f1_score)]
+fpOpenF1[type=='GSFromBoth', median(f1_score)]
 
 #sensitivity with only no modification
 fpOpenEvaSen = list()
@@ -97,9 +111,6 @@ ggplot(fpOpenEvaSenDt2, aes(type,frac,col=type))+
 table(fpOpenEva$Assigned_Modi)
 fpOpenEva[, pepSAV4autoRT:=forMatPep(pep = pepSAV, modi = Assigned_Modi)]
 fpOpenEva[, pepOrg4autoRT:=forMatPep(pep = PepOrg, modi = Assigned_Modi)]
-dim(fpOpenEva)#40265    21
-fpOpenEva$pepLength=nchar(fpOpenEva$PepOrg)
-max(fpOpenEva$pepLength) #47
 
 for(msSampleName in unique(fpOpenEva$msSample)){
   fwrite(fpOpenEva[msSample==msSampleName,
