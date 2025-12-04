@@ -16,3 +16,6 @@ Below is the annotation for the code files.
 Other files:
 1. HOM_MouseHumanSequence.rpt - the data table containing all the human and mouse homologous gene information
 2. aaDelta.rds, aaMass.rds, hmPairs.rds - the data frames for the data analysis
+
+Citation:
+[Song Y, Zhou, Q, and Huang C. J Proteome Res. 2025](https://pubmed.ncbi.nlm.nih.gov/41328725/)
